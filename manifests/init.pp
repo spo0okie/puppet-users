@@ -2,12 +2,12 @@
 #Впоследствии может быть модифицировано немнго. А может и нет
 
 
+
 # Определяем класс и присваиваем значения по умолчанию, если не передано значений при объявлении класса.
-define users::manage($action = "create", $m_groups = $title) {
+define users::manage($action = "create", $groups = $title) {
 	#определяемся с пользователем:
 	case $action  {
-		
-		create: {
+		'create': {
 			# создаем группу
 			group { "$title":
 				ensure	=>	present
@@ -17,10 +17,10 @@ define users::manage($action = "create", $m_groups = $title) {
 			user { "$title":
 				ensure	=>	present,
 				# добавляем в группы (группы передаются массивом)
-				groups	=>	$m_groups,
+				groups	=>	$groups,
 				comment	=>	"$title",
 				home	=>	"/home/$title",
-				shell	=>	"/bin/bash",
+				shell	=>	"/bin/sh",
 				
 				# на некоторых системах доступа по SSH не будет пока пользователь заблокирован "passwd -u -f <user>". Это можно обойти, задав пароль пользователю:
 				# password => "$6$fdrc...tut_hash_moego_parolya....ovj0",
@@ -28,25 +28,19 @@ define users::manage($action = "create", $m_groups = $title) {
 				
 				managehome => true,
 			} ->
-			
-			# создаём папку .ssh для нашего публичного ключа
-			file { "/home/$title/.ssh":
-				ensure	=>	"directory",
-				owner	=>	"$title",
-				group	=>	"$title",
-				mode	=>	700,
-			} ->
+			users::profile { "$title": }
 			
 			# размещаем ключ и назначаем соответствующие права на него
 			file { "/home/$title/.ssh/authorized_keys":
 				owner	=>	"$title",
 				group	=>	"$title",
 				mode	=>	"0400",
-				content	=>	template("users/keys/$title.erb");
+				source	=>	"puppet:///modules/users/keys/$title",
+				require	=>	File["/home/$title/.ssh/"]
 			}
 		}
 		
-		delete: {
+		'delete': {
 			# Логика удаления пользователя с сервера:
 			#
 			# В данном месте логично разместить различные скрипты по очистке системы от пользовательских файлов или передачи прав другим пользователям, а также прочие действия, связанные с удалением пользователя из системы
@@ -66,3 +60,12 @@ define users::manage($action = "create", $m_groups = $title) {
 		}
 	}
 }
+
+define users::manageadm ($action = "create" ) {
+	require users::sudoers
+	users::manage {"$title": 
+		action=>$action,
+		groups=>[ "${users::sudoers::group}" ]
+	}
+}
+
