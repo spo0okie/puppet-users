@@ -20,7 +20,7 @@ define users::manage($action = "create", $groups = $title) {
 				groups	=>	$groups,
 				comment	=>	"$title",
 				home	=>	"/home/$title",
-				shell	=>	"/bin/sh",
+				# shell	=>	"/bin/sh",
 				
 				# на некоторых системах доступа по SSH не будет пока пользователь заблокирован "passwd -u -f <user>". Это можно обойти, задав пароль пользователю:
 				# password => "$6$fdrc...tut_hash_moego_parolya....ovj0",
