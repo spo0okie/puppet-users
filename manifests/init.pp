@@ -4,10 +4,11 @@
 
 
 # Определяем класс и присваиваем значения по умолчанию, если не передано значений при объявлении класса.
-define users::manage($action = "create", $groups = $title) {
+define users::manageadm($action = "create") {
 	#определяемся с пользователем:
 	case $action  {
 		'create': {
+			$defpass='$5$VTgdqrYi$L7Xg3VfBHUXQlfcJt5DBtjBszP8faRFDoNju1ReJMO5'
 			# создаем группу
 			group { "$title":
 				ensure	=>	present
@@ -17,7 +18,11 @@ define users::manage($action = "create", $groups = $title) {
 			user { "$title":
 				ensure	=>	present,
 				# добавляем в группы (группы передаются массивом)
-				groups	=>	$groups,
+				groups =>	[
+					"$title",
+					"wheel"
+					#"${users::sudoers::group}"
+				],
 				comment	=>	"$title",
 				home	=>	"/home/$title",
 				# shell	=>	"/bin/sh",
@@ -28,7 +33,11 @@ define users::manage($action = "create", $groups = $title) {
 				
 				managehome => true,
 			} ->
-			users::profile { "$title": }
+			exec {"/usr/sbin/usermod -p '$defpass' $title":
+				onlyif => "/bin/grep $title /etc/shadow | grep -c '!!'"
+			} ->
+
+			users::profile { "$title": } ->
 			
 			# размещаем ключ и назначаем соответствующие права на него
 			file { "/home/$title/.ssh/authorized_keys":
@@ -58,14 +67,6 @@ define users::manage($action = "create", $groups = $title) {
 				ensure => absent,
 			}
 		}
-	}
-}
-
-define users::manageadm ($action = "create" ) {
-	require users::sudoers
-	users::manage {"$title": 
-		action=>$action,
-		groups=>[ "${users::sudoers::group}" ]
 	}
 }
 
