@@ -12,7 +12,13 @@
 
 
 # Определяем класс и присваиваем значения по умолчанию, если не передано значений при объявлении класса.
-define users::manageadm($action = "create") {
+define users::manageadm(
+	$action = "create",
+	$groups = [
+		"$title",
+		"${users::sudoers::group}"
+	]
+) {
 	#определяемся с пользователем:
 	case $action  {
 		'create': {
@@ -26,10 +32,7 @@ define users::manageadm($action = "create") {
 			user { "$title":
 				ensure	=>	present,
 				# добавляем в группы (группы передаются массивом)
-				groups =>	[
-					"$title",
-					"${users::sudoers::group}"
-				],
+				groups =>	$groups,
 				comment	=>	"$title",
 				home	=>	"/home/$title",
 				# shell	=>	"/bin/sh",
@@ -51,7 +54,7 @@ define users::manageadm($action = "create") {
 				owner	=>	"$title",
 				group	=>	"$title",
 				mode	=>	"0400",
-				source	=>	"puppet:///modules/users/keys/$title",
+				source	=>	"puppet:///code_files/userkeys/$title",
 				require	=>	File["/home/$title/.ssh/"]
 			}
 		}
