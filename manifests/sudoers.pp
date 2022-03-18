@@ -20,6 +20,7 @@ class users::sudoers {
 		}
 	}
 
+	package {'sudo': ensure => installed} ->
 	file_line {'sudoers_group':
 		path	=>	$filepath,
 		line	=>	"%$group	ALL=(ALL)	NOPASSWD:ALL",
