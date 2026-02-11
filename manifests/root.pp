@@ -1,6 +1,7 @@
+#группа супервользователей
 class users::root {
-	case $::operatingsystem {
-		'Debian','Ubuntu':	{ $group='root' }
-		default:			{ $group='wheel' }
-	}
+  case $facts['os']['family'] {
+    'Debian': { $group='root' }
+    default:  { $group='wheel' }
+  }
 }
